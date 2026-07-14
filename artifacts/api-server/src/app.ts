@@ -1,8 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
-// pino-http uses `export =` (CJS); cast handles ESM/CJS interop under moduleResolution:bundler
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pinoHttp = require("pino-http") as typeof import("pino-http");
+// pino-http uses `export =` (CJS); cast to any avoids TS2349 under moduleResolution:bundler
+// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+const pinoHttp = require("pino-http") as any;
 import router from "./routes";
 import { logger } from "./lib/logger";
 
