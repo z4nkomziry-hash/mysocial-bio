@@ -1,32 +1,34 @@
-import express, { type Express } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
-// pino-http uses `export =` (CJS); cast to any avoids TS2349 under moduleResolution:bundler
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-const pinoHttp = require("pino-http") as any;
 import router from "./routes";
 import { logger } from "./lib/logger";
 
 const app: Express = express();
 
-app.use(
-  pinoHttp({
-    logger,
-    serializers: {
-      req(req: Record<string, unknown> & { id?: unknown; method?: string; url?: string }) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: typeof req.url === "string" ? req.url.split("?")[0] : undefined,
-        };
+// مێدلوێرەکێ سادە و بێ کێشە بۆ لۆگکرنا داواکاریان د جهێ pino-http دا
+// هەمان کار و زانیاری یێن داواکاریێ لۆگ دکەت بێی تێکدانا سیستەمێ ESM
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    
+    // کورتکرنا لینکێ داواکاریێ (لادانا پرسیار دۆشەکێ/Query params) هەروەک کۆدێ تە یێ کۆن
+    const cleanUrl = typeof req.url === "string" ? req.url.split("?")[0] : undefined;
+
+    logger.info({
+      req: {
+        method: req.method,
+        url: cleanUrl,
       },
-      res(res: { statusCode?: number }) {
-        return {
-          statusCode: res.statusCode,
-        };
+      res: {
+        statusCode: res.statusCode,
       },
-    },
-  }),
-);
+      duration: `${duration}ms`
+    }, `Request processed`);
+  });
+  next();
+});
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
