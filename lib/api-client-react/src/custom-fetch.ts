@@ -356,6 +356,16 @@ export async function customFetch<T = unknown>(
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
     }
+  } else if (!headers.has("authorization")) {
+    // Check localStorage for peywend_token
+    try {
+      const peywendToken = typeof window !== 'undefined' ? window.localStorage.getItem('peywend_token') : null;
+      if (peywendToken) {
+        headers.set("authorization", `Bearer ${peywendToken}`);
+      }
+    } catch (e) {
+      // Ignore localStorage access errors
+    }
   }
 
   const requestInfo = { method, url: resolveUrl(input) };

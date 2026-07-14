@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "پەیوەند — لینک ئین بیو"
+version = "1.0.0"
+id = "artifacts/peywend"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23002
+
+[services.development]
+run = "pnpm --filter @workspace/peywend run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/peywend", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/peywend/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23002"
+BASE_PATH = "/"
