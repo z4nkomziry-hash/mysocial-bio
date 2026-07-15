@@ -1,7 +1,7 @@
 [build]
   base = "artifacts/peywend"
   command = "pnpm run build"
-  publish = "build"
+  publish = "dist/public"
 
 [build.environment]
   PORT = "3000"
