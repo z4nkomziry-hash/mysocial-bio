@@ -1,74 +1,67 @@
-# پەیوەند — Kurdish Link-in-Bio Platform
+# پەیوەند — MySocial Bio
 
-A free Beacons.ai-style link-in-bio platform built entirely in Behdini Kurdish (Arabic script, RTL). Kurdish creators can claim a username, build a beautiful public profile, add links and social accounts, and track analytics.
-
-## Run & Operate
-
-Replit workflows (configured and ready):
-- **API Server** — `PORT=8080 pnpm --filter @workspace/api-server run dev` (port 8080, served at `/api`)
-- **Frontend** — `PORT=3000 BASE_PATH=/ pnpm --filter @workspace/peywend run dev` (port 3000, served at `/`)
-
-Other commands:
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-
-## Roadmap
-
-See `REQUIREMENTS.md` for the full premium upgrade requirements (20+ themes, admin panel, Stripe, 2FA, analytics, AI features, etc.).
+A premium bio-link platform (like Linktree/Beacons) built in **Behdini Kurdish (بەهدینی)**. Users create a single shareable profile page with all their links, analytics, and customization.
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- Frontend: React + Vite + Tailwind CSS v4 (artifact: `artifacts/peywend`)
-- API: Express 5 (artifact: `artifacts/api-server`, base path: `/api`)
-- DB: PostgreSQL + Drizzle ORM (lib: `lib/db`)
-- Auth: JWT (bcryptjs + jsonwebtoken), token stored in `localStorage` key `peywend_token`
-- Validation: Zod (zod v3), drizzle-zod
-- API codegen: Orval (from `lib/api-spec/openapi.yaml`)
-- Font: Cairo (Google Fonts, Arabic script)
-- Icons: lucide-react + react-icons/si
+- **Frontend** (`artifacts/peywend`): React 19 + Vite + TailwindCSS v4 + Wouter routing + TanStack Query
+- **API Server** (`artifacts/api-server`): Express 5 + Drizzle ORM + PostgreSQL
+- **Shared Libraries** (`lib/`):
+  - `lib/db` — Drizzle schema and migrations
+  - `lib/api-zod` — Zod schemas for API contracts
+  - `lib/api-spec` — OpenAPI spec + Orval codegen
+  - `lib/api-client-react` — Generated React Query hooks
 
-## Where things live
+## Running the project
 
-- `lib/api-spec/openapi.yaml` — single source of truth for API contracts
-- `lib/db/src/schema/` — Drizzle table definitions (users, pages, blocks, links, clicks)
-- `artifacts/api-server/src/routes/` — Express route handlers
-- `artifacts/api-server/src/lib/auth.ts` — JWT sign/verify + bcrypt helpers
-- `artifacts/api-server/src/middlewares/requireAuth.ts` — JWT middleware
-- `artifacts/peywend/src/` — React frontend (Kurdish RTL UI)
-- `lib/api-client-react/src/generated/` — generated hooks (do not edit)
+The **Project** run button starts both services in parallel:
 
-## Architecture decisions
+| Service | Workflow name | Command | Port | Preview |
+|---------|--------------|---------|------|---------|
+| Frontend | `artifacts/peywend: web` | `pnpm --filter @workspace/peywend run dev` | 23002 | `/` |
+| API Server | `artifacts/api-server: API Server` | `pnpm --filter @workspace/api-server run dev` | 8080 | `/api` |
 
-- All UI text is Behdini Kurdish in Arabic (Sorani) script; `dir="rtl"` set globally
-- JWT auth (stateless) — token in localStorage, sent as `Authorization: Bearer` header
-- Orval codegen from OpenAPI spec — no hand-written API types
-- Public profile route: `/:username` — fetches profile without auth
-- Click tracking: POST `/api/analytics/click` — increments `links.click_count`
+## First-time setup
 
-## Product
+```bash
+# 1. Install dependencies
+pnpm install
 
-- Landing page with Kurdish hero section and feature breakdown
-- Username claim + multi-step account registration
-- Dashboard with stats, Link-in-Bio editor, Analytics (recharts), Settings
-- Link-in-Bio editor: drag-to-reorder blocks (header, links, follower_count, contact_form)
-- Public profile at `/{username}` — shows links, social icons, avatar, theme
-- Analytics: clicks per day chart + top links
+# 2. Push database schema (uses Replit's built-in PostgreSQL via DATABASE_URL)
+pnpm --filter @workspace/db exec drizzle-kit push
+```
+
+The database is Replit's built-in PostgreSQL — `DATABASE_URL` is provided automatically as an environment variable; no additional configuration is needed.
+
+## Database schema
+
+Schema lives in `lib/db/src/schema/`:
+- `users.ts` — user accounts
+- `pages.ts` — bio pages (one per user)
+- `blocks.ts` — content blocks on a page
+- `links.ts` — individual links
+- `clicks.ts` — click analytics events
+
+To update the schema after changes: `pnpm --filter @workspace/db exec drizzle-kit push`
+
+## Key routes (Kurdish slugs)
+
+| Path | Page |
+|------|------|
+| `/` | Landing page |
+| `/چوونەژوورەوە` | Login |
+| `/تومارکردن` | Register step 1 |
+| `/تومارکردن/زانیاری` | Register step 2 |
+| `/داشبۆرد` | Dashboard home |
+| `/داشبۆرد/لینکی-بیو` | Link-in-bio editor |
+| `/داشبۆرد/شیکاری` | Analytics |
+| `/داشبۆرد/ڕێکخستن` | Settings |
+| `/:username` | Public profile page |
+
+## Requirements
+
+See `REQUIREMENTS.md` for the full feature roadmap (analytics, admin panel, premium plans, AI features, themes, etc.).
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
-
-## Gotchas
-
-- Use `zod/v4` import path in schema files (workspace uses zod@3 with v4 compatibility layer)
-- OpenAPI body schemas must use entity-shaped names (e.g. `LinkInput`, not `CreateLinkBody`) to avoid TS2308 collisions
-- `format: email` in OpenAPI spec causes Orval to emit `zod.email()` which is Zod v4 API — do not use it
-- Cairo font import must be the VERY FIRST line in `index.css` before all other `@import` statements
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
-- See `lib/api-spec/openapi.yaml` for the complete API contract
+- Language: Behdini Kurdish (بەهدینی) for all UI text
