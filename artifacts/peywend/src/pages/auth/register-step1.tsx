@@ -46,7 +46,7 @@ export default function RegisterStep1() {
     }, 500);
   };
 
-  const { data: checkData, isLoading: isChecking } = useCheckUsername(debouncedUsername, {
+  const { data: checkData, isLoading: isChecking, isError: isCheckError } = useCheckUsername(debouncedUsername, {
     query: {
       enabled: debouncedUsername.length >= 3,
       retry: false
@@ -55,6 +55,8 @@ export default function RegisterStep1() {
 
   const isAvailable = checkData?.available;
   const isValidLength = watchUsername.length >= 3;
+  // Allow proceeding when API is unreachable (error) — step 2 will catch duplicates
+  const canProceed = isValidLength && !isChecking && (isAvailable === true || isCheckError);
 
   function onSubmit(values: z.infer<typeof usernameSchema>) {
     if (isAvailable) {
@@ -119,7 +121,7 @@ export default function RegisterStep1() {
             <Button 
               type="submit" 
               className="w-full h-14 rounded-xl text-lg mt-6 gap-2 font-bold" 
-              disabled={!isAvailable || isChecking || !isValidLength}
+              disabled={!canProceed}
             >
               پێشەوە
               <ArrowLeft size={20} />
