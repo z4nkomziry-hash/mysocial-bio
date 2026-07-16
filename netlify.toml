@@ -10,7 +10,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://YOUR_API_URL/api/:splat"
+  to = "https://ecb92957-73ed-4af2-a3de-2516696f780a-00-3om9xkak1meuj.pike.replit.dev/api/:splat"
   status = 200
   force = true
 
