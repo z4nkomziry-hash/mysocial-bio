@@ -126,7 +126,7 @@ export default function RegisterStep1() {
               className="w-full h-14 rounded-xl text-lg mt-6 gap-2 font-bold" 
               disabled={!isAvailable || isChecking || !isValidLength}
             >
-              دواتر
+              پێشەوە
               <ArrowLeft size={20} />
             </Button>
           </form>
