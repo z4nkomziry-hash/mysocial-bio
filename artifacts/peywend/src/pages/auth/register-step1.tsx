@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,22 +33,17 @@ export default function RegisterStep1() {
   });
 
   const watchUsername = form.watch("username");
-  
-  // Custom simple debounce implementation to avoid missing hooks issue
-  // In a real app we'd use useDebounce hook properly
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleUsernameChange = (val: string) => {
-    // Basic formatting
     const formatted = val.toLowerCase().replace(/[^a-z0-9_.]/g, "");
     form.setValue("username", formatted, { shouldValidate: true });
-    
-    // Manual debounce for the API check
-    const timerId = setTimeout(() => {
-      if (formatted.length >= 3) {
-        setDebouncedUsername(formatted);
-      }
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedUsername(formatted.length >= 3 ? formatted : "");
     }, 500);
-    
-    return () => clearTimeout(timerId);
   };
 
   const { data: checkData, isLoading: isChecking } = useCheckUsername(debouncedUsername, {
