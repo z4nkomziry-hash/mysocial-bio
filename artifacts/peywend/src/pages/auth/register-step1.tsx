@@ -59,7 +59,7 @@ export default function RegisterStep1() {
   const canProceed = isValidLength && !isChecking && (isAvailable === true || isCheckError);
 
   function onSubmit(values: z.infer<typeof usernameSchema>) {
-    if (isAvailable) {
+    if (isAvailable || isCheckError) {
       // Navigate to step 2 with username in state
       sessionStorage.setItem("peywend_signup_username", values.username);
       setLocation("/تومارکردن/زانیاری");
