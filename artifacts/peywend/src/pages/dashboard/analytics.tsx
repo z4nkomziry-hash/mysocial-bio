@@ -3,7 +3,7 @@ import { useGetAnalytics } from "@workspace/api-client-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { MousePointerClick, TrendingUp, Link as LinkIcon, ExternalLink } from "lucide-react";
+import { BarChart3, MousePointerClick, TrendingUp, Link as LinkIcon, ExternalLink } from "lucide-react";
 
 export default function Analytics() {
   const { data: analytics, isLoading } = useGetAnalytics();
@@ -176,5 +176,3 @@ export default function Analytics() {
     </DashboardLayout>
   );
 }
-// Required import that was missed above
-import { BarChart3 } from "lucide-react";

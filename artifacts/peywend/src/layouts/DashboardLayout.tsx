@@ -28,7 +28,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background flex flex-col pb-20 md:pb-0 md:flex-row rtl:flex-row-reverse">
+    <div className="min-h-[100dvh] bg-background flex flex-col pb-20 md:pb-0 md:flex-row">
       
       {/* Mobile Top Header */}
       <header className="md:hidden flex items-center justify-between p-4 border-b bg-card sticky top-0 z-40">

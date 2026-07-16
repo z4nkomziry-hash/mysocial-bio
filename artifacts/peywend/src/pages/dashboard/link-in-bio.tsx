@@ -76,6 +76,7 @@ export default function LinkInBio() {
     
     createBlock.mutate(
       { 
+        pageId: page.id,
         data: { 
           type, 
           title: defaultTitle,
@@ -247,8 +248,12 @@ export default function LinkInBio() {
 // Sub-components for specific block types
 
 function LinksEditor({ block, pageId }: { block: any, pageId: number }) {
-  const { data: links, isLoading } = useGetLinks({ query: { enabled: !!block.id } });
-  const blockLinks = links?.filter(l => l.blockId === block.id) || [];
+  // Pass blockId as query param — without it the server returns [] always
+  const { data: links, isLoading } = useGetLinks(
+    { blockId: block.id },
+    { query: { enabled: !!block.id } }
+  );
+  const blockLinks = links || [];
   
   const createLink = useCreateLink();
   const deleteLink = useDeleteLink();

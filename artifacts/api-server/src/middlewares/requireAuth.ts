@@ -9,22 +9,25 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
   if (!token) {
-    res.status(401).json({ error: "احتیاج به چوونەژوورەوەیە" });
+    res.status(401).json({ error: "چوونەژوورەوە پێویستە" });
     return;
   }
 
   const payload = verifyToken(token);
   if (!payload) {
-    res.status(401).json({ error: "توکن نادروستە" });
+    res.status(401).json({ error: "توکن نادروستە یان بەسەرچووە" });
     return;
   }
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId)).limit(1);
-  if (!user) {
-    res.status(401).json({ error: "بەکارهێنەر نەدۆزرایەوە" });
-    return;
+  try {
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId)).limit(1);
+    if (!user) {
+      res.status(401).json({ error: "بەکارهێنەر نەدۆزرایەوە" });
+      return;
+    }
+    (req as any).user = user;
+    next();
+  } catch (err) {
+    next(err);
   }
-
-  (req as any).user = user;
-  next();
 }

@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MousePointerClick, Link as LinkIcon, Eye, Sparkles, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function DashboardHome() {
@@ -15,20 +15,27 @@ export default function DashboardHome() {
   const createPage = useCreatePage();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const hasTriedCreate = useRef(false);
 
-  // Initialize a default page if user has none
+  // Initialize a default page if user has none — guarded by a ref so it
+  // fires at most once regardless of how many times the component re-renders.
   useEffect(() => {
-    if (pages && pages.length === 0 && !createPage.isPending) {
-      createPage.mutate({ data: { title: "Home" } }, {
+    if (pages && pages.length === 0 && !hasTriedCreate.current) {
+      hasTriedCreate.current = true;
+      createPage.mutate({ data: { title: "ماڵپەڕ" } }, {
         onSuccess: () => {
           toast({
             title: "پەڕەی سەرەکی دروستکرا",
             description: "ئێستا دەتوانیت لینکەکانت زیاد بکەیت.",
           });
+        },
+        onError: () => {
+          // Allow retry on next mount if creation failed
+          hasTriedCreate.current = false;
         }
       });
     }
-  }, [pages, createPage, toast]);
+  }, [pages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <DashboardLayout>
