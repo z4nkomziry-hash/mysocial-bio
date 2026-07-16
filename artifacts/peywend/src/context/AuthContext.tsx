@@ -20,22 +20,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   });
 
+  const [user, setUser] = useState<User | null>(null);
+
   const { data: meData, isLoading: isMeLoading } = useGetMe({
     query: {
-      enabled: !!token,
+      enabled: !!token && !user,
       retry: false,
     }
   });
 
-  const user = meData || null;
+  useEffect(() => {
+    if (meData) setUser(meData);
+  }, [meData]);
 
   const login = (newUser: User, newToken: string) => {
     setToken(newToken);
+    setUser(newUser);
     localStorage.setItem('peywend_token', newToken);
   };
 
   const logout = () => {
     setToken(null);
+    setUser(null);
     localStorage.removeItem('peywend_token');
   };
 

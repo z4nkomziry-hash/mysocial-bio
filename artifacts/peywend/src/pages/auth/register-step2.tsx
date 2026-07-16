@@ -56,6 +56,7 @@ export default function RegisterStep2() {
             title: "بەخێربێیت!",
             description: "ژمارەکەت بە سەرکەوتوویی دروستکرا.",
           });
+          setLocation("/داشبۆرد");
         },
         onError: (error) => {
           toast({

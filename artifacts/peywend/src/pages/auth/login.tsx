@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { loginSchema } from "@/lib/schemas";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +24,7 @@ export default function Login() {
   const { login } = useAuth();
   const { toast } = useToast();
   const loginMutation = useLogin();
+  const [, setLocation] = useLocation();
 
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
@@ -43,6 +44,7 @@ export default function Login() {
             title: "بەخێربێیتەوە!",
             description: "بە سەرکەوتوویی چوویتە ژوورەوە.",
           });
+          setLocation("/داشبۆرد");
         },
         onError: (error) => {
           toast({
