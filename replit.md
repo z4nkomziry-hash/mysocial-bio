@@ -4,12 +4,19 @@ A free Beacons.ai-style link-in-bio platform built entirely in Behdini Kurdish (
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080, served at /api)
-- `pnpm --filter @workspace/peywend run dev` — run the frontend (port 23002, served at /)
+Replit workflows (configured and ready):
+- **API Server** — `PORT=8080 pnpm --filter @workspace/api-server run dev` (port 8080, served at `/api`)
+- **Frontend** — `PORT=3000 BASE_PATH=/ pnpm --filter @workspace/peywend run dev` (port 3000, served at `/`)
+
+Other commands:
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+
+## Roadmap
+
+See `REQUIREMENTS.md` for the full premium upgrade requirements (20+ themes, admin panel, Stripe, 2FA, analytics, AI features, etc.).
 
 ## Stack
 
