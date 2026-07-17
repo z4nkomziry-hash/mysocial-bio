@@ -2,8 +2,6 @@ import { useAuth } from "@/context/AuthContext";
 import { Link, Redirect, useLocation } from "wouter";
 import { LayoutDashboard, Link as LinkIcon, BarChart3, Settings, ExternalLink, LogOut } from "lucide-react";
 import { Logo } from "@/components/Logo";
-import { Button } from "@/components/ui/button";
-import { useLogout } from "@workspace/api-client-react";
 import { motion } from "framer-motion";
 
 const TABS = [
@@ -14,9 +12,8 @@ const TABS = [
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, setUser } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const [location] = useLocation();
-  const logout = useLogout();
 
   if (isLoading) {
     return (
@@ -27,15 +24,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Redirect to="/چوونەژوورەوە" />;
-
-  const handleLogout = () => {
-    logout.mutate(undefined, {
-      onSettled: () => {
-        localStorage.removeItem("peywend_token");
-        setUser(null);
-      }
-    });
-  };
 
   return (
     <div className="min-h-[100dvh] bg-background flex flex-col pb-20 md:pb-0 md:flex-row">
@@ -102,7 +90,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-semibold truncate leading-tight">{user.name}</p>
               <p className="text-xs text-muted-foreground truncate">@{user.username}</p>
             </div>
-            <button onClick={handleLogout}
+            <button
+              onClick={logout}
+              title="چوونەدەرەوە"
               className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-destructive/10 hover:text-destructive text-muted-foreground shrink-0">
               <LogOut size={14} />
             </button>
@@ -119,7 +109,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* ── Mobile bottom tab bar ─────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 border-t border-border/60 bg-card/95 backdrop-blur-md z-50">
-        <div className="flex items-stretch justify-around px-2 py-1.5 safe-area-bottom">
+        <div className="flex items-stretch justify-around px-2 py-1.5">
           {TABS.map((tab) => {
             const isActive = location === tab.href;
             return (

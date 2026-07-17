@@ -4,60 +4,72 @@ import { useGetMe, User } from '@workspace/api-client-react';
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  isLoading: boolean;
   login: (user: User, token: string) => void;
   logout: () => void;
-  isLoading: boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem('peywend_token');
-    } catch (e) {
-      return null;
-    }
+    try { return localStorage.getItem('peywend_token'); }
+    catch { return null; }
   });
 
   const [user, setUser] = useState<User | null>(null);
 
-  const { data: meData, isLoading: isMeLoading } = useGetMe({
+  // Hydrate user from server on page load / refresh if a token exists
+  const {
+    data: meData,
+    isLoading: isMeLoading,
+    isError: isMeError,
+  } = useGetMe({
     query: {
       enabled: !!token && !user,
       retry: false,
-    }
+    },
   });
 
+  // Populate user once the /me response arrives
   useEffect(() => {
     if (meData) setUser(meData);
   }, [meData]);
 
+  // Auto-logout if the stored token is rejected (401 / expired)
+  useEffect(() => {
+    if (isMeError && token) {
+      try { localStorage.removeItem('peywend_token'); } catch { /* ignore */ }
+      setToken(null);
+      setUser(null);
+    }
+  }, [isMeError]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const login = (newUser: User, newToken: string) => {
+    try { localStorage.setItem('peywend_token', newToken); } catch { /* ignore */ }
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem('peywend_token', newToken);
   };
 
   const logout = () => {
+    try { localStorage.removeItem('peywend_token'); } catch { /* ignore */ }
     setToken(null);
     setUser(null);
-    localStorage.removeItem('peywend_token');
   };
 
-  const isLoading = !!token && isMeLoading;
+  // isLoading is true only while we're waiting for the /me hydration call
+  const isLoading = !!token && !user && isMeLoading;
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, logout, setUser }}>
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 }

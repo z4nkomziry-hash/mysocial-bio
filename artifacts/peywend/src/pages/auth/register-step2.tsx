@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,28 +22,24 @@ import { Input } from "@/components/ui/input";
 import { UserPlus, ArrowRight } from "lucide-react";
 
 export default function RegisterStep2() {
-  const [location, setLocation] = useLocation();
-  const { login } = useAuth();
+  const [, setLocation] = useLocation();
+  const { login, user, isLoading } = useAuth();
   const { toast } = useToast();
   const registerMutation = useRegister();
-  
-  // Get username from session storage
-  const [username] = useState(() => sessionStorage.getItem("peywend_signup_username"));
+
+  // Read username stored by step 1
+  const [username] = useState(() => sessionStorage.getItem("peywend_signup_username") ?? "");
+
+  // Redirect already-authenticated users
+  if (!isLoading && user) return <Redirect to="/داشبۆرد" />;
+
+  // No username means the user navigated here directly — send back to step 1
+  if (!username) return <Redirect to="/تومارکردن" />;
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      username: username || "",
-      name: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { username, name: "", email: "", password: "" },
   });
-
-  // Redirect to step 1 if no username is found in session storage
-  if (!username) {
-    return <Redirect to="/تومارکردن" />;
-  }
 
   function onSubmit(values: z.infer<typeof registerSchema>) {
     registerMutation.mutate(
@@ -52,17 +48,14 @@ export default function RegisterStep2() {
         onSuccess: (data) => {
           sessionStorage.removeItem("peywend_signup_username");
           login(data.user, data.token);
-          toast({
-            title: "بەخێربێیت!",
-            description: "ژمارەکەت بە سەرکەوتوویی دروستکرا.",
-          });
+          toast({ title: "بەخێربێیت!", description: "ژمارەکەت بە سەرکەوتوویی دروستکرا." });
           setLocation("/داشبۆرد");
         },
         onError: (error) => {
           toast({
             variant: "destructive",
             title: "هەڵە ڕوویدا",
-            description: error.data?.error || "نەتوانرا ژمارە دروست بکرێت. تکایە دووبارە هەوڵبدەرەوە.",
+            description: (error.data as any)?.error || "نەتوانرا ژمارە دروست بکرێت. تکایە دووبارە هەوڵبدەرەوە.",
           });
         },
       }
@@ -72,18 +65,25 @@ export default function RegisterStep2() {
   return (
     <AuthLayout>
       <div className="mb-4">
-        <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={() => setLocation("/تومارکردن")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 text-muted-foreground"
+          onClick={() => setLocation("/تومارکردن")}
+        >
           <ArrowRight size={16} />
           گەڕانەوە
         </Button>
       </div>
 
       <div className="bg-card border shadow-sm rounded-2xl p-6 sm:p-8">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium" dir="ltr">
+        {/* Show chosen username */}
+        <div className="flex items-center gap-2 mb-3">
+          <div className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold" dir="ltr">
             peywend.com/{username}
           </div>
         </div>
+
         <h1 className="text-2xl font-bold mb-2">دروستکردنی ژمارە</h1>
         <p className="text-muted-foreground mb-8">
           زانیارییە کەسییەکانت پڕبکەرەوە بۆ تەواوکردنی پرۆسەکە.
@@ -130,18 +130,15 @@ export default function RegisterStep2() {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
-              className="w-full h-12 rounded-xl text-md mt-6 gap-2" 
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl text-md mt-6 gap-2"
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground" />
+                <div className="w-5 h-5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
               ) : (
-                <>
-                  <UserPlus size={20} />
-                  تومارکردن
-                </>
+                <><UserPlus size={20} /> تومارکردن</>
               )}
             </Button>
           </form>

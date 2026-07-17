@@ -2,9 +2,10 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation, Link } from "wouter";
+import { useLocation, Link, Redirect } from "wouter";
 import { useCheckUsername } from "@workspace/api-client-react";
 import { usernameSchema } from "@/lib/schemas";
+import { useAuth } from "@/context/AuthContext";
 
 import { AuthLayout } from "@/layouts/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -18,23 +19,23 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, CheckCircle2, XCircle, Loader2 } from "lucide-react";
-import { useDebounce } from "@/hooks/use-debounce";
 
 export default function RegisterStep1() {
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [debouncedUsername, setDebouncedUsername] = useState("");
-  
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const form = useForm<z.infer<typeof usernameSchema>>({
     resolver: zodResolver(usernameSchema),
-    defaultValues: {
-      username: "",
-    },
+    defaultValues: { username: "" },
     mode: "onChange",
   });
 
   const watchUsername = form.watch("username");
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Redirect already-authenticated users
+  if (!isLoading && user) return <Redirect to="/داشبۆرد" />;
 
   const handleUsernameChange = (val: string) => {
     const formatted = val.toLowerCase().replace(/[^a-z0-9_.]/g, "");
@@ -46,24 +47,20 @@ export default function RegisterStep1() {
     }, 500);
   };
 
-  const { data: checkData, isLoading: isChecking, isError: isCheckError } = useCheckUsername(debouncedUsername, {
-    query: {
-      enabled: debouncedUsername.length >= 3,
-      retry: false
-    }
-  });
+  const { data: checkData, isLoading: isChecking, isError: isCheckError } = useCheckUsername(
+    debouncedUsername,
+    { query: { enabled: debouncedUsername.length >= 3, retry: false } }
+  );
 
   const isAvailable = checkData?.available;
   const isValidLength = watchUsername.length >= 3;
-  // Allow proceeding when API is unreachable (error) — step 2 will catch duplicates
+  // Allow proceeding when the availability check fails (network error) — step 2 will catch real duplicates
   const canProceed = isValidLength && !isChecking && (isAvailable === true || isCheckError);
 
   function onSubmit(values: z.infer<typeof usernameSchema>) {
-    if (isAvailable || isCheckError) {
-      // Navigate to step 2 with username in state
-      sessionStorage.setItem("peywend_signup_username", values.username);
-      setLocation("/تومارکردن/زانیاری");
-    }
+    if (!isAvailable && !isCheckError) return;
+    sessionStorage.setItem("peywend_signup_username", values.username);
+    setLocation("/تومارکردن/زانیاری");
   }
 
   return (
@@ -87,9 +84,9 @@ export default function RegisterStep1() {
                       <span className="absolute left-4 text-muted-foreground font-medium select-none">
                         peywend.com/
                       </span>
-                      <Input 
-                        placeholder="username" 
-                        className="pl-[105px] h-14 text-lg font-medium" 
+                      <Input
+                        placeholder="username"
+                        className="pl-[105px] h-14 text-lg font-medium"
                         {...field}
                         onChange={(e) => handleUsernameChange(e.target.value)}
                       />
@@ -98,11 +95,9 @@ export default function RegisterStep1() {
                           <Loader2 className="animate-spin text-muted-foreground" size={20} />
                         )}
                         {!isChecking && isValidLength && checkData && (
-                          isAvailable ? (
-                            <CheckCircle2 className="text-green-500" size={20} />
-                          ) : (
-                            <XCircle className="text-destructive" size={20} />
-                          )
+                          isAvailable
+                            ? <CheckCircle2 className="text-green-500" size={20} />
+                            : <XCircle className="text-destructive" size={20} />
                         )}
                       </div>
                     </div>
@@ -110,7 +105,7 @@ export default function RegisterStep1() {
                   <div className="flex items-center justify-between text-sm mt-2">
                     {isValidLength && checkData && !isChecking && (
                       <span className={isAvailable ? "text-green-500 font-medium" : "text-destructive font-medium"}>
-                        {isAvailable ? "کراوەیە" : "بەکارهاتووە"}
+                        {isAvailable ? "کراوەیە ✓" : "بەکارهاتووە ✗"}
                       </span>
                     )}
                     <FormMessage className="m-0 text-right w-full" />
@@ -118,9 +113,9 @@ export default function RegisterStep1() {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
-              className="w-full h-14 rounded-xl text-lg mt-6 gap-2 font-bold" 
+            <Button
+              type="submit"
+              className="w-full h-14 rounded-xl text-lg mt-6 gap-2 font-bold"
               disabled={!canProceed}
             >
               پێشەوە

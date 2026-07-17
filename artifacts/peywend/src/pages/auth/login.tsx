@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Link, useLocation } from "wouter";
+import { Link, Redirect, useLocation } from "wouter";
 import { useLogin } from "@workspace/api-client-react";
 import { loginSchema } from "@/lib/schemas";
 import { useAuth } from "@/context/AuthContext";
@@ -21,17 +21,17 @@ import { Input } from "@/components/ui/input";
 import { LogIn } from "lucide-react";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, user, isLoading } = useAuth();
   const { toast } = useToast();
   const loginMutation = useLogin();
   const [, setLocation] = useLocation();
 
+  // Redirect already-authenticated users straight to the dashboard
+  if (!isLoading && user) return <Redirect to="/داشبۆرد" />;
+
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
@@ -40,17 +40,14 @@ export default function Login() {
       {
         onSuccess: (data) => {
           login(data.user, data.token);
-          toast({
-            title: "بەخێربێیتەوە!",
-            description: "بە سەرکەوتوویی چوویتە ژوورەوە.",
-          });
+          toast({ title: "بەخێربێیتەوە!", description: "بە سەرکەوتوویی چوویتە ژوورەوە." });
           setLocation("/داشبۆرد");
         },
         onError: (error) => {
           toast({
             variant: "destructive",
             title: "هەڵە ڕوویدا",
-            description: error.data?.error || "ئیمەیڵ یان وشەی نهێنی هەڵەیە.",
+            description: (error.data as any)?.error || "ئیمەیڵ یان وشەی نهێنی هەڵەیە.",
           });
         },
       }
@@ -61,9 +58,7 @@ export default function Login() {
     <AuthLayout>
       <div className="bg-card border shadow-sm rounded-2xl p-6 sm:p-8">
         <h1 className="text-2xl font-bold mb-2">بەخێربێیتەوە</h1>
-        <p className="text-muted-foreground mb-8">
-          زانیارییەکانت بنووسە بۆ چوونەژوورەوە
-        </p>
+        <p className="text-muted-foreground mb-8">زانیارییەکانت بنووسە بۆ چوونەژوورەوە</p>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -93,18 +88,15 @@ export default function Login() {
                 </FormItem>
               )}
             />
-            <Button 
-              type="submit" 
-              className="w-full h-12 rounded-xl text-md mt-6 gap-2" 
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl text-md mt-6 gap-2"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-foreground" />
+                <div className="w-5 h-5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" />
               ) : (
-                <>
-                  <LogIn size={20} />
-                  چوونەژوورەوە
-                </>
+                <><LogIn size={20} /> چوونەژوورەوە</>
               )}
             </Button>
           </form>
