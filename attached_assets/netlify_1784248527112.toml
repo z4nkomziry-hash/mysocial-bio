@@ -1,0 +1,20 @@
+[build]
+  base = "."
+  command = "pnpm install --frozen-lockfile && pnpm --filter @workspace/peywend run build"
+  publish = "artifacts/peywend/dist/public"
+
+[build.environment]
+  PORT = "3000"
+  BASE_PATH = "/"
+  NODE_VERSION = "24"
+
+[[redirects]]
+  from = "/api/*"
+  to = "https://ecb92957-73ed-4af2-a3de-2516696f780a-00-3om9xkak1meuj.pike.replit.dev/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
