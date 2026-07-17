@@ -1,0 +1,5 @@
+- [Peywend design system](peywend-design.md) — landing page forces dark mode via `.dark` wrapper; dashboard stays theme-aware (light/dark).
+- [Route order bug fixed](blocks-route-order.md) — Express `/blocks/reorder` must stay above `/blocks/:id` or "reorder" is swallowed as an ID param.
+- [API error handling pattern](api-error-handling.md) — all route handlers must wrap in try/catch and call `next(err)`; global error handler in app.ts converts to JSON.
+- [useGetLinks blockId bug](useGetLinks-bug.md) — first arg is params `{ blockId }`, second is options `{ query }`. Passing options as first arg sends nothing to server.
+- [createBlock pageId bug](createBlock-bug.md) — mutation variables are `{ pageId, data }` not just `{ data }`. Missing pageId = 400 from server silently.
